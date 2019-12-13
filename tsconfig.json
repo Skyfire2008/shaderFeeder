@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "outFile": "bin/index.js",
+        "target": "es6",
+        "module": "none"
+    },
+    "compileOnSave": true,
+    "include": [
+		"src/*"
+	],
+	"exclude": [
+		"node_modules"
+	]
+}

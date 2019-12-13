@@ -1,0 +1,11 @@
+{
+	"name": "shader_feeder",
+	"version": "0.0.1",
+	"devDependencies": {
+		"knockout": "latest",
+		"@types/knockout": "latest"
+	},
+	"scripts": {
+		"build": "tsc"
+	}
+}
