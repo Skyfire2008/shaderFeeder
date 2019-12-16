@@ -1,1 +1,3 @@
-console.log("hello world!");
+window.addEventListener("load", () => {
+	ko.applyBindings();
+});

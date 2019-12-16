@@ -32,7 +32,7 @@ export class Shader {
 
 	private id: WebGLProgram;
 	private frag: WebGLShader;
-	private params: Map<string, Param>;
+	private params: Array<Param>;
 
 	constructor(fragSrc: string) {
 		this.id = Shader.gl.createProgram();
@@ -50,6 +50,11 @@ export class Shader {
 	}
 }
 
-interface Param {
-
+export interface Param {
+	name: string;
+	location: WebGLUniformLocation;
+	dim: number;
+	description: string;
+	setter: (values: Array<number>) => void;
+	defaultValues: Array<number>;
 }
