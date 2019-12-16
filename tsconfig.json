@@ -1,6 +1,6 @@
 {
 	"compilerOptions": {
-		"outDir": "bin",
+		"outFile": "bin/index.js",
 		"target": "es6",
 		"module": "none"
 	},

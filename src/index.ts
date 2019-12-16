@@ -1,3 +1,6 @@
-window.addEventListener("load", () => {
-	ko.applyBindings();
-});
+namespace ShaderFeeder {
+
+	window.addEventListener("load", () => {
+		ko.applyBindings();
+	});
+}

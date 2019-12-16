@@ -4,16 +4,15 @@
 <head>
 	<title>Shader Feeder</title>
 	<script src="knockout-latest.debug.js"></script>
+	<script src="index.js"></script>
 </head>
 
 <body>
-	<script src="ui/default.js"></script>
-
-	<script src="index.js"></script>
-
-
+	<canvas id="canvas"></canvas>
 	<div data-bind="text: Math.random()"></div>
-	<default-control param="{name: 'kek!'}"></default-control>
+	<default-control params="{name: 'pos', dim: 3, defaultValues: [1, 2, 3]}"></default-control>
+	<label for="imageUpload">Select the image:</label>
+	<input type="file" accept="image/jpeg, image/png, image/bmp, image/tiff, image/webp" id="imageUpload"></input>
 
 </body>
 
