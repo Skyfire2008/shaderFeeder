@@ -2,14 +2,24 @@ namespace ShaderFeeder {
 
 	interface NamedImage {
 		image: HTMLImageElement;
+		texture: Texture;
 		name: string;
 	}
 
 	class ViewModel {
 		public images: KnockoutObservableArray<NamedImage>;
+		public gl: WebGLRenderingContext;
 
 		constructor() {
 			this.images = ko.observableArray();
+
+			const canvas = <HTMLCanvasElement>document.getElementById("canvas");
+			this.gl = canvas.getContext("webgl");
+			if (!this.gl) {
+				console.error("Could not create webGL renderign context");
+			}
+			Texture.init(this.gl);
+			Shader.init(this.gl);
 		}
 
 		public uploadFile(file: File) {
@@ -19,7 +29,8 @@ namespace ShaderFeeder {
 				img.onload = (e: Event) => {
 					this.images.push({
 						name: file.name,
-						image: img
+						image: img,
+						texture: new Texture(img)
 					});
 
 				};
@@ -32,6 +43,7 @@ namespace ShaderFeeder {
 	}
 
 	window.addEventListener("load", () => {
-		ko.applyBindings(new ViewModel());
+		const viewModel = new ViewModel();
+		ko.applyBindings(viewModel);
 	});
 }
