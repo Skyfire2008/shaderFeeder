@@ -27,7 +27,6 @@ namespace ShaderFeeder {
 
 		constructor(param: Param) {
 			this.param = ko.observable(param);
-			console.log(param);
 			this.values = [];
 			for (let i = 0; i < param.dim; i++) {
 				const current = ko.observable(param.defaultValues[i] ? param.defaultValues[i] : 0).extend({ numeric: null });
