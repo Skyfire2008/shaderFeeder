@@ -16,11 +16,7 @@
 	<input id="imageUpload" type="file" accept="image/jpeg, image/png, image/bmp, image/tiff, image/webp"
 		data-bind="event: {change: ()=>{uploadFile($element.files[0])}}"></input>
 
-	<select>
-		<!-- ko foreach: images -->
-		<option data-bind="text: $data.name"></option>
-		<!-- /ko -->>
-	</select>
+	<select data-bind="options: images, optionsText: 'name', value: selectedImage"></select>
 
 </body>
 

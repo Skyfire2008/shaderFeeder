@@ -8,15 +8,23 @@ namespace ShaderFeeder {
 
 	class ViewModel {
 		public images: KnockoutObservableArray<NamedImage>;
+		public selectedImage: KnockoutObservable<NamedImage>;
+		public canvas: HTMLCanvasElement;
 		public gl: WebGLRenderingContext;
 
 		constructor() {
 			this.images = ko.observableArray();
+			this.selectedImage = ko.observable();
+			this.selectedImage.subscribe((newImage) => {
+				this.canvas.width = newImage.image.width;
+				this.canvas.height = newImage.image.height;
+				this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+			});
 
-			const canvas = <HTMLCanvasElement>document.getElementById("canvas");
-			this.gl = canvas.getContext("webgl");
+			this.canvas = <HTMLCanvasElement>document.getElementById("canvas");
+			this.gl = this.canvas.getContext("webgl");
 			if (!this.gl) {
-				console.error("Could not create webGL renderign context");
+				console.error("Could not create webGL rendering context");
 			}
 			Texture.init(this.gl);
 
