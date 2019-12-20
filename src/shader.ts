@@ -5,6 +5,7 @@ namespace ShaderFeeder {
 		//STATIC PROPERTIES AND METHODS
 		private static gl: WebGLRenderingContext;
 		private static vert: WebGLShader;
+		private static quadBuf: WebGLBuffer;
 
 		/**
 		 * Loads a given shader
@@ -28,6 +29,25 @@ namespace ShaderFeeder {
 		static init(gl: WebGLRenderingContext, vertSrc: string) {
 			Shader.gl = gl;
 			Shader.vert = Shader.load(vertSrc, gl.VERTEX_SHADER);
+
+			//init the quad
+			const points = [
+				-1, -1,
+				-1, 1,
+				1, -1,
+				1, 1
+			];
+			Shader.quadBuf = gl.createBuffer();
+			gl.bindBuffer(gl.ARRAY_BUFFER, Shader.quadBuf);
+			gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(points), gl.STATIC_DRAW);
+			gl.vertexAttribPointer(
+				0,
+				2,
+				gl.FLOAT,
+				false,
+				0,
+				0);
+			gl.enableVertexAttribArray(0);
 		}
 
 		//INSTANCE PROPERTIES AND METHODS
@@ -36,19 +56,39 @@ namespace ShaderFeeder {
 		private frag: WebGLShader;
 		private params: Array<Param>;
 
+		private texLoc: WebGLUniformLocation;
+
 		constructor(fragSrc: string) {
-			this.id = Shader.gl.createProgram();
+			const gl = Shader.gl;
+			this.id = gl.createProgram();
 
-			this.frag = Shader.load(fragSrc, Shader.gl.FRAGMENT_SHADER);
+			this.frag = Shader.load(fragSrc, gl.FRAGMENT_SHADER);
 
-			Shader.gl.attachShader(this.id, Shader.vert);
-			Shader.gl.attachShader(this.id, this.frag);
-			Shader.gl.linkProgram(this.id);
-			Shader.gl.validateProgram(this.id);
+			gl.attachShader(this.id, Shader.vert);
+			gl.attachShader(this.id, this.frag);
+			gl.bindAttribLocation(this.id, 0, "pos");
+			gl.linkProgram(this.id);
+			gl.validateProgram(this.id);
 
-			if (!Shader.gl.getProgramParameter(this.id, Shader.gl.LINK_STATUS)) {
-				console.error("Error while linking the program: " + Shader.gl.getProgramInfoLog(this.id));
+			this.texLoc = gl.getUniformLocation(this.id, "tex");
+
+			if (!gl.getProgramParameter(this.id, gl.LINK_STATUS)) {
+				console.error("Error while linking the program: " + gl.getProgramInfoLog(this.id));
 			}
+		}
+
+		public use(): void {
+			Shader.gl.useProgram(this.id);
+		}
+
+		public draw(): void {
+			Shader.gl.drawArrays(Shader.gl.TRIANGLE_STRIP, 0, 4);
+		}
+
+		public bindTexture(tex: WebGLTexture): void {
+			Shader.gl.activeTexture(Shader.gl.TEXTURE0);
+			Shader.gl.bindTexture(Shader.gl.TEXTURE_2D, (<any>tex).id); //typescript bug
+			Shader.gl.uniform1i(this.texLoc, 0);
 		}
 	}
 

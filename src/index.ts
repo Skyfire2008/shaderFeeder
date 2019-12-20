@@ -22,12 +22,25 @@ namespace ShaderFeeder {
 		constructor() {
 			this.shaders = ko.observableArray();
 			this.selectedShader = ko.observable();
+			this.selectedShader.subscribe(({ shader, name }) => {
+				shader.use();
+				if (this.selectedImage()) {
+					shader.bindTexture(this.selectedImage().texture);
+					shader.draw();
+				}
+			})
 			this.images = ko.observableArray();
 			this.selectedImage = ko.observable();
 			this.selectedImage.subscribe((newImage) => {
 				this.canvas.width = newImage.image.width;
 				this.canvas.height = newImage.image.height;
 				this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+
+				if (this.selectedShader()) {
+					const shader = this.selectedShader().shader;
+					shader.bindTexture(newImage.texture);
+					shader.draw();
+				}
 			});
 
 			//get webGL context
@@ -43,7 +56,7 @@ namespace ShaderFeeder {
 				Shader.init(this.gl, value);
 
 				//load all shaders
-				const shaderNames = ["swizzle"];
+				const shaderNames = ["swizzle", "shift"];
 				for (const name of shaderNames) {
 					fetchFile(`shaders/${name}.frag`).then((shaderSrc) => {
 						this.shaders.push({ name, shader: new Shader(shaderSrc) });
