@@ -1,5 +1,10 @@
 namespace ShaderFeeder {
 
+	interface NamedShader {
+		shader: Shader;
+		name: string;
+	}
+
 	interface NamedImage {
 		image: HTMLImageElement;
 		texture: Texture;
@@ -7,12 +12,16 @@ namespace ShaderFeeder {
 	}
 
 	class ViewModel {
+		public shaders: KnockoutObservableArray<NamedShader>;
+		public selectedShader: KnockoutObservable<NamedShader>;
 		public images: KnockoutObservableArray<NamedImage>;
 		public selectedImage: KnockoutObservable<NamedImage>;
 		public canvas: HTMLCanvasElement;
 		public gl: WebGLRenderingContext;
 
 		constructor() {
+			this.shaders = ko.observableArray();
+			this.selectedShader = ko.observable();
 			this.images = ko.observableArray();
 			this.selectedImage = ko.observable();
 			this.selectedImage.subscribe((newImage) => {
@@ -21,6 +30,7 @@ namespace ShaderFeeder {
 				this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
 			});
 
+			//get webGL context
 			this.canvas = <HTMLCanvasElement>document.getElementById("canvas");
 			this.gl = this.canvas.getContext("webgl");
 			if (!this.gl) {
@@ -28,8 +38,17 @@ namespace ShaderFeeder {
 			}
 			Texture.init(this.gl);
 
+			//load vertex shader and init Shader object
 			fetchFile("shaders/quad.vert").then((value) => {
 				Shader.init(this.gl, value);
+
+				//load all shaders
+				const shaderNames = ["swizzle"];
+				for (const name of shaderNames) {
+					fetchFile(`shaders/${name}.frag`).then((shaderSrc) => {
+						this.shaders.push({ name, shader: new Shader(shaderSrc) });
+					});
+				}
 			});
 		}
 

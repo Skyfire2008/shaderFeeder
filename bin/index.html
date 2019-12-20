@@ -7,7 +7,15 @@
 	<script src="index.js"></script>
 </head>
 
+<style>
+	input {
+		width: 64px;
+	}
+</style>
+
 <body>
+
+	<select data-bind="options: shaders, optionsText: 'name', value: selectedShader"></select>
 	<canvas id="canvas"></canvas>
 
 	<default-control params="{name: 'pos', dim: 3, defaultValues: [1, 2, 3]}"></default-control>

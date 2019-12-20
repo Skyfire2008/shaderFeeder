@@ -19,7 +19,7 @@ namespace ShaderFeeder {
 
 			//check, that the shader was successfully compiled
 			if (!Shader.gl.getShaderParameter(id, Shader.gl.COMPILE_STATUS)) {
-				throw "Error occurred while compiling shader: " + Shader.gl.getShaderInfoLog(id);
+				console.log("Error occurred while compiling shader: " + Shader.gl.getShaderInfoLog(id));
 			}
 
 			return id;
@@ -47,7 +47,7 @@ namespace ShaderFeeder {
 			Shader.gl.validateProgram(this.id);
 
 			if (!Shader.gl.getProgramParameter(this.id, Shader.gl.LINK_STATUS)) {
-				throw "Error while linking the program: " + Shader.gl.getProgramInfoLog(this.id);
+				console.error("Error while linking the program: " + Shader.gl.getProgramInfoLog(this.id));
 			}
 		}
 	}
