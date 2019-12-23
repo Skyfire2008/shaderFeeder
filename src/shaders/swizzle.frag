@@ -1,10 +1,17 @@
 /*@config{
 	"version": 1,
 	"params": {
-		"strength": {
-			"dim": 3,
-			"type": "float",
-			"input": "default"
+		"red": {
+			"input": "enum",
+			"enumValues": ["red", "green", "blue"]
+		},
+		"green": {
+			"input": "enum",
+			"enumValues": ["red", "green", "blue"]
+		},
+		"blue": {
+			"input": "enum",
+			"enumValues": ["red", "green", "blue"]
 		}
 	}
 }*/
@@ -14,9 +21,26 @@ precision highp float;
 varying vec2 UV;
 uniform sampler2D tex;
 
-uniform vec3 strength;
+uniform int red;
+uniform int green;
+uniform int blue;
+
+float getChannel(vec4 color, int index){
+	if(index==0){
+		return color.r;
+	}else if(index==1){
+		return color.g;
+	}else if(index==2){
+		return color.b;
+	}
+
+	return 0.0;
+}
 
 void main(){
-	//gl_FragColor.rgba = texture2D(tex, UV).gbra;
-	gl_FragColor.gbra = texture2D(tex, UV)*vec4(strength, 1.0);
+	vec4 inputColor = texture2D(tex, UV);
+	gl_FragColor.a = 1.0;
+	gl_FragColor.r = getChannel(inputColor, red);
+	gl_FragColor.g = getChannel(inputColor, green);
+	gl_FragColor.b = getChannel(inputColor, blue);
 }

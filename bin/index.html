@@ -14,8 +14,10 @@
 </style>
 
 <body>
-
-	<select style="display: block;" data-bind="options: shaders, optionsText: 'name', value: selectedShader"></select>
+	<div style="display: block;">
+		<label for="shaderSelect">Selet the shader:</label>
+		<select id="shaderSelect" data-bind="options: shaders, optionsText: 'name', value: selectedShader"></select>
+	</div>
 	<canvas style="display: block;" id="canvas"></canvas>
 
 	<label for="imageUpload">Select the image:</label>
@@ -27,7 +29,7 @@
 	<div>
 		<!-- ko if: selectedShader() -->
 		<!-- ko foreach: selectedShader().shader.params-->
-		<div data-bind="component: {name: $data.inputType+'-input', params: $data}"></div>
+		<div data-bind="component: $data.inputType+'-input'"></div>
 		<!-- /ko -->
 		<!-- /ko -->
 	</div>

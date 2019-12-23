@@ -43,4 +43,8 @@ namespace ShaderFeeder {
 			return result;
 		}
 	}
+
+	export function pos2Angle(x: number, y: number): number {
+		return Math.atan2(y, x);
+	}
 }

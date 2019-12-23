@@ -8,10 +8,15 @@ namespace ShaderFeeder {
 			Texture.gl = gl;
 		}
 
-		private id: WebGLTexture;
+		public readonly id: WebGLTexture;
+		public readonly width: number;
+		public readonly height: number;
 
 		constructor(img: HTMLImageElement) {
 			const gl = Texture.gl;
+
+			this.width = img.width;
+			this.height = img.height;
 
 			this.id = gl.createTexture();
 			gl.bindTexture(gl.TEXTURE_2D, this.id);

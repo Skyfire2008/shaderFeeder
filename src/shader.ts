@@ -57,6 +57,7 @@ namespace ShaderFeeder {
 		private params: Array<Param>;
 
 		private texLoc: WebGLUniformLocation;
+		private imgSizeLoc: WebGLUniformLocation = null;
 
 		constructor(fragSrc: string) {
 			const gl = Shader.gl;
@@ -98,13 +99,21 @@ namespace ShaderFeeder {
 							break;
 						}
 						case InputEnum.imgSize: {
-							paramDef.dim = 2;
+							if (this.imgSizeLoc !== null) {
+								console.warn("Multiple parameters setting image size used!");
+							}
+							this.imgSizeLoc = gl.getUniformLocation(this.id, name);
+							continue;
+						}
+						case InputEnum.angle: {
+							paramDef.dim = 1;
 							paramDef.type = TypeEnum.float;
-							paramDef.input = InputEnum.default;
+							break;
 						}
 					}
 
 					this.params.push({
+						owner: this,
 						name: name,
 						description: paramDef.description,
 						dim: paramDef.dim,
@@ -126,14 +135,19 @@ namespace ShaderFeeder {
 			Shader.gl.drawArrays(Shader.gl.TRIANGLE_STRIP, 0, 4);
 		}
 
-		public bindTexture(tex: WebGLTexture): void {
+		public bindTexture(tex: Texture): void {
 			Shader.gl.activeTexture(Shader.gl.TEXTURE0);
-			Shader.gl.bindTexture(Shader.gl.TEXTURE_2D, (<any>tex).id); //typescript bug
+			Shader.gl.bindTexture(Shader.gl.TEXTURE_2D, tex.id); //typescript bug
 			Shader.gl.uniform1i(this.texLoc, 0);
+
+			if (this.imgSizeLoc !== null) {
+				Shader.gl.uniform2f(this.imgSizeLoc, tex.width, tex.height);
+			}
 		}
 	}
 
 	export interface Param {
+		owner: Shader;
 		name: string;
 		dim: number;
 		inputType: InputEnum;
@@ -146,7 +160,8 @@ namespace ShaderFeeder {
 	const enum InputEnum {
 		default = "default",
 		enum = "enum",
-		imgSize = "imgSize"
+		imgSize = "imgSize",
+		angle = "angle"
 	}
 
 	export const enum TypeEnum {

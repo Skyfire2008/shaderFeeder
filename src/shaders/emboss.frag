@@ -1,17 +1,20 @@
 /*@config{
 	"version": 1,
-	"params":{
-		"strength":{
+	"params": {
+		"strength": {
 			"input": "default",
 			"type": "float",
 			"dim": 1
 		},
-		"imgSize":{
+		"imgSize": {
 			"input": "imgSize"
 		},
-		"heightMode":{
+		"heightMode": {
 			"input": "enum",
 			"enumValues": ["luminance", "sum", "red", "green", "blue"]
+		},
+		"angle": {
+			"input": "angle"
 		}
 	}
 }*/
@@ -24,6 +27,7 @@ uniform vec2 imgSize;
 
 uniform float strength;
 uniform int heightMode;
+uniform float angle;
 
 float getHeight(vec4 color){
 	float result = 0.0;
@@ -47,7 +51,9 @@ void main(){
 	float height = getHeight(texture2D(tex, UV));
 	float heightX = getHeight(texture2D(tex, UV + vec2(1.0/imgSize.x, 0.0)));
 	float heightY = getHeight(texture2D(tex, UV + vec2(0.0, 1.0/imgSize.y)));
-	vec2 delta = vec2(heightX - height, heightY - height) * strength / imgSize;
+	vec2 normal = vec2(heightX - height, heightY - height);
 
-	gl_FragColor = texture2D(tex, (UV+delta));
+	vec2 direction = vec2(cos(angle), sin(angle));
+	gl_FragColor = vec4(dot(direction, normal)*strength);
+	gl_FragColor.a = 1.0;
 }
