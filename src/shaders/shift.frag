@@ -1,5 +1,19 @@
-/*@params={
-
+/*@config{
+	"version": 1,
+	"params":{
+		"strength":{
+			"input": "default",
+			"type": "float",
+			"dim": 1
+		},
+		"imgSize":{
+			"input": "imgSize"
+		},
+		"heightMode":{
+			"input": "enum",
+			"enumValues": ["luminance", "sum", "red", "green", "blue"]
+		}
+	}
 }*/
 precision highp float;
 
@@ -30,12 +44,10 @@ float getHeight(vec4 color){
 }
 
 void main(){
-	/*float height = getHeight(texture2D(tex, UV));
+	float height = getHeight(texture2D(tex, UV));
 	float heightX = getHeight(texture2D(tex, UV + vec2(1.0/imgSize.x, 0.0)));
 	float heightY = getHeight(texture2D(tex, UV + vec2(0.0, 1.0/imgSize.y)));
 	vec2 delta = vec2(heightX - height, heightY - height) * strength * imgSize;
 
-	gl_FragColor = texture2D(tex, (UV+delta));*/
-
-	gl_FragColor = texture2D(tex, UV)*0.5;
+	gl_FragColor = texture2D(tex, (UV+delta));
 }

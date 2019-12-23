@@ -31,7 +31,7 @@ namespace ShaderFeeder {
 			for (let i = 0; i < param.dim; i++) {
 				const current = ko.observable(param.defaultValues[i] ? param.defaultValues[i] : 0).extend({ numeric: null });
 				current.subscribe((value) => {
-					console.log(value);
+					this.param().setter(this.values.map((value) => { return value(); }));
 				})
 				this.values.push(current);
 			}
@@ -39,7 +39,7 @@ namespace ShaderFeeder {
 		}
 	}
 
-	ko.components.register("default-control", {
+	ko.components.register("default-input", {
 		viewModel: {
 			createViewModel: (param: Param, componentInfo) => {
 				return new DefaultControl(param);

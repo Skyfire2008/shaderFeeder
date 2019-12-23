@@ -9,22 +9,28 @@
 
 <style>
 	input {
-		width: 64px;
+		width: 128px;
 	}
 </style>
 
 <body>
 
-	<select data-bind="options: shaders, optionsText: 'name', value: selectedShader"></select>
-	<canvas id="canvas"></canvas>
-
-	<default-control params="{name: 'pos', dim: 3, defaultValues: [1, 2, 3]}"></default-control>
+	<select style="display: block;" data-bind="options: shaders, optionsText: 'name', value: selectedShader"></select>
+	<canvas style="display: block;" id="canvas"></canvas>
 
 	<label for="imageUpload">Select the image:</label>
 	<input id="imageUpload" type="file" accept="image/jpeg, image/png, image/bmp, image/tiff, image/webp"
 		data-bind="event: {change: ()=>{uploadFile($element.files[0])}}"></input>
 
 	<select data-bind="options: images, optionsText: 'name', value: selectedImage"></select>
+
+	<div>
+		<!-- ko if: selectedShader() -->
+		<!-- ko foreach: selectedShader().shader.params-->
+		<div data-bind="component: {name: $data.inputType+'-input', params: $data}"></div>
+		<!-- /ko -->
+		<!-- /ko -->
+	</div>
 
 </body>
 

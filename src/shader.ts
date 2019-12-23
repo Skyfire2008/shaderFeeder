@@ -75,6 +75,47 @@ namespace ShaderFeeder {
 			if (!gl.getProgramParameter(this.id, gl.LINK_STATUS)) {
 				console.error("Error while linking the program: " + gl.getProgramInfoLog(this.id));
 			}
+
+			//get the config
+			this.params = [];
+			const reg = /.*\/\*@config(.+)\*\//s;
+			const result = reg.exec(fragSrc);
+			if (result !== null) {
+				const config = <ConfigDef>JSON.parse(result[1]);
+				//for every parameter name...
+				for (const name in config.params) {
+					const loc = gl.getUniformLocation(this.id, name);
+					if (loc === null) {
+						console.error(`No uniform ${name} found!`);
+						continue;
+					}
+
+					const paramDef = config.params[name];
+					switch (paramDef.input) {
+						case InputEnum.enum: {
+							paramDef.dim = 1;
+							paramDef.type = TypeEnum.int;
+							break;
+						}
+						case InputEnum.imgSize: {
+							paramDef.dim = 2;
+							paramDef.type = TypeEnum.float;
+							paramDef.input = InputEnum.default;
+						}
+					}
+
+					this.params.push({
+						name: name,
+						description: paramDef.description,
+						dim: paramDef.dim,
+						inputType: paramDef.input,
+						setter: makeParamSetter(gl, loc, paramDef.dim, paramDef.type),
+						defaultValues: makeDefaultParamValues(paramDef.dim),
+						enumValues: paramDef.enumValues
+					});
+				}
+
+			}
 		}
 
 		public use(): void {
@@ -94,10 +135,39 @@ namespace ShaderFeeder {
 
 	export interface Param {
 		name: string;
-		location: WebGLUniformLocation;
 		dim: number;
+		inputType: InputEnum;
 		description: string;
-		setter: (values: Array<number>) => void;
-		defaultValues: Array<number>;
+		setter: (value: number | Array<number>) => void;
+		defaultValues: number | Array<number>;
+		enumValues?: Array<string>;
+	}
+
+	const enum InputEnum {
+		default = "default",
+		enum = "enum",
+		imgSize = "imgSize"
+	}
+
+	export const enum TypeEnum {
+		float = "float",
+		int = "int"
+	}
+
+	interface ParamDef {
+		input: InputEnum;
+		description?: string;
+		type?: TypeEnum;
+		dim?: number;
+		enumValues?: Array<string>;
+	}
+
+	interface ConfigDef {
+		version: number;
+		params: Params;
+	}
+
+	interface Params {
+		[index: string]: ParamDef;
 	}
 }
