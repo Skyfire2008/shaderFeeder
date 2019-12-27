@@ -5,13 +5,18 @@ namespace ShaderFeeder {
 		public value: KnockoutObservable<number>;
 		private dial: HTMLElement;
 		private dragging: boolean = false;
-		private startX: number;
-		private startY: number;
-		//private startAngle: number;
+		private posX: number;
+		private posY: number;
+		private startAngle: number;
 
 		constructor(param: Param, dial: HTMLElement) {
 			this.param = param;
 			this.dial = dial;
+			const rect = dial.getBoundingClientRect();
+			this.posX = (rect.left + rect.right) / 2;
+			this.posY = (rect.top + rect.bottom) / 2;
+			console.log(this.posX, this.posY);
+
 			dial.addEventListener("mousedown", this.dialMouseDown.bind(this));
 			document.addEventListener("mousemove", this.docMouseMove.bind(this));
 			document.addEventListener("mouseup", this.docMouseUp.bind(this));
@@ -31,17 +36,19 @@ namespace ShaderFeeder {
 
 		private dialMouseDown(e: MouseEvent) {
 			e.preventDefault();
+
+			const rect = this.dial.getBoundingClientRect();
+			this.posX = (rect.left + rect.right) / 2;
+			this.posY = (rect.top + rect.bottom) / 2;
+
 			this.dragging = true;
-			this.startX = e.screenX;
-			this.startY = e.screenY;
-			console.log(this.dial.getBoundingClientRect());
-			//this.startAngle = pos2Angle(e.offsetX - 20, e.offsetY - 20) - (this.value() * Math.PI / 180);
+			this.startAngle = pos2Angle(e.clientX - this.posX, e.clientY - this.posY) - (this.value() * Math.PI / 180);
 		}
 
 		private docMouseMove(e: MouseEvent) {
 			if (this.dragging) {
-				const currentAngle = pos2Angle(e.screenX - this.startX, e.screenY - this.startY);
-				this.value(currentAngle * 180 / Math.PI);
+				const currentAngle = pos2Angle(e.clientX - this.posX, e.clientY - this.posY);
+				this.value((currentAngle - this.startAngle) * 180 / Math.PI);
 			}
 		}
 
