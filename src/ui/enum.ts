@@ -2,14 +2,18 @@ namespace ShaderFeeder {
 
 	export class EnumControl {
 		public param: Param;
+		private parent: AppViewModel;
 		public selectedValue: KnockoutObservable<number>;
 
-		constructor(param: Param) {
+		constructor(param: Param, parent: AppViewModel) {
 			this.param = param;
+			this.parent = parent;
 			this.selectedValue = ko.observable(0);
 			this.selectedValue.subscribe((newValue) => {
 				this.param.setter(newValue);
-				this.param.owner.draw();
+				if (this.parent.redrawOnParamChange()) {
+					this.parent.redraw();
+				}
 			})
 		}
 
@@ -21,7 +25,8 @@ namespace ShaderFeeder {
 	ko.components.register("enum-input", {
 		viewModel: {
 			createViewModel: (params: any, componentInfo: KnockoutComponentTypes.ComponentInfo) => {
-				return new EnumControl(ko.contextFor(componentInfo.element).$data);
+				const context = ko.contextFor(componentInfo.element);
+				return new EnumControl(context.$data, context.$parent);
 			}
 		},
 		template: `

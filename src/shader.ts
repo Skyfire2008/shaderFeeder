@@ -3,7 +3,6 @@ namespace ShaderFeeder {
 	export class Shader {
 
 		//STATIC PROPERTIES AND METHODS
-		private static gl: WebGLRenderingContext;
 		private static vert: WebGLShader;
 		private static quadBuf: WebGLBuffer;
 
@@ -14,28 +13,27 @@ namespace ShaderFeeder {
 		 * @returns shader handle
 		 */
 		static load(src: string, type: number): WebGLShader {
-			const id = Shader.gl.createShader(type);
-			Shader.gl.shaderSource(id, src);
-			Shader.gl.compileShader(id);
+			const id = gl.createShader(type);
+			gl.shaderSource(id, src);
+			gl.compileShader(id);
 
 			//check, that the shader was successfully compiled
-			if (!Shader.gl.getShaderParameter(id, Shader.gl.COMPILE_STATUS)) {
-				console.log("Error occurred while compiling shader: " + Shader.gl.getShaderInfoLog(id));
+			if (!gl.getShaderParameter(id, gl.COMPILE_STATUS)) {
+				console.log("Error occurred while compiling shader: " + gl.getShaderInfoLog(id));
 			}
 
 			return id;
 		}
 
-		static init(gl: WebGLRenderingContext, vertSrc: string) {
-			Shader.gl = gl;
+		static init(vertSrc: string) {
 			Shader.vert = Shader.load(vertSrc, gl.VERTEX_SHADER);
 
 			//init the quad
 			const points = [
-				-1, -1,
 				-1, 1,
-				1, -1,
-				1, 1
+				-1, -1,
+				1, 1,
+				1, -1
 			];
 			Shader.quadBuf = gl.createBuffer();
 			gl.bindBuffer(gl.ARRAY_BUFFER, Shader.quadBuf);
@@ -60,7 +58,6 @@ namespace ShaderFeeder {
 		private imgSizeLoc: WebGLUniformLocation = null;
 
 		constructor(fragSrc: string) {
-			const gl = Shader.gl;
 			this.id = gl.createProgram();
 
 			this.frag = Shader.load(fragSrc, gl.FRAGMENT_SHADER);
@@ -113,7 +110,6 @@ namespace ShaderFeeder {
 					}
 
 					this.params.push({
-						owner: this,
 						name: name,
 						description: paramDef.description,
 						dim: paramDef.dim,
@@ -128,26 +124,25 @@ namespace ShaderFeeder {
 		}
 
 		public use(): void {
-			Shader.gl.useProgram(this.id);
+			gl.useProgram(this.id);
 		}
 
 		public draw(): void {
-			Shader.gl.drawArrays(Shader.gl.TRIANGLE_STRIP, 0, 4);
+			gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 		}
 
 		public bindTexture(tex: Texture): void {
-			Shader.gl.activeTexture(Shader.gl.TEXTURE0);
-			Shader.gl.bindTexture(Shader.gl.TEXTURE_2D, tex.id); //typescript bug
-			Shader.gl.uniform1i(this.texLoc, 0);
+			gl.activeTexture(gl.TEXTURE0);
+			gl.bindTexture(gl.TEXTURE_2D, tex.id);
+			gl.uniform1i(this.texLoc, 0);
 
 			if (this.imgSizeLoc !== null) {
-				Shader.gl.uniform2f(this.imgSizeLoc, tex.width, tex.height);
+				gl.uniform2f(this.imgSizeLoc, tex.width, tex.height);
 			}
 		}
 	}
 
 	export interface Param {
-		owner: Shader;
 		name: string;
 		dim: number;
 		inputType: InputEnum;

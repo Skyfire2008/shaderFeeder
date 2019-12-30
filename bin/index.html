@@ -15,8 +15,11 @@
 
 <body>
 	<div style="display: block;">
-		<label for="shaderSelect">Selet the shader:</label>
+		<label for="shaderSelect">Select the shader:</label>
 		<select id="shaderSelect" data-bind="options: shaders, optionsText: 'name', value: selectedShader"></select>
+		<button data-bind="click: redraw" id="applyBtn">Apply</button>
+		<button
+			data-bind="click: continuousRedrawing, text: keepRedrawing()? 'Stop redrawing' : 'Start redrawing'"></button>
 	</div>
 	<canvas style="display: block;" id="canvas"></canvas>
 
@@ -27,6 +30,8 @@
 	<select data-bind="options: images, optionsText: 'name', value: selectedImage"></select>
 
 	<div>
+		<label for="redrawOnParamChange">Redraw on parameter change:</label>
+		<input id="redrawOnParamChange" data-bind="checked: redrawOnParamChange" type="checkbox"></input>
 		<!-- ko if: selectedShader() -->
 		<!-- ko foreach: selectedShader().shader.params-->
 		<div data-bind="component: $data.inputType+'-input'"></div>

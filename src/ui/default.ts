@@ -23,16 +23,20 @@ namespace ShaderFeeder {
 
 	export class DefaultControl {
 		public param: Param;
+		private parent: AppViewModel;
 		public values: Array<KnockoutObservable<number>>;
 
-		constructor(param: Param) {
+		constructor(param: Param, parent: AppViewModel) {
 			this.param = param;
+			this.parent = parent;
 			this.values = [];
 			for (let i = 0; i < param.dim; i++) {
 				const current = ko.observable(param.defaultValues[i] ? param.defaultValues[i] : 0).extend({ numeric: null }); //TODO: fix this, doesn't consider the fact that default value can be a number
 				current.subscribe((value) => {
 					this.param.setter(this.values.map((value) => { return value(); }));
-					this.param.owner.draw();
+					if (this.parent.redrawOnParamChange()) {
+						this.parent.redraw();
+					}
 				})
 				this.values.push(current);
 			}
@@ -43,7 +47,8 @@ namespace ShaderFeeder {
 	ko.components.register("default-input", {
 		viewModel: {
 			createViewModel: (params: any, componentInfo: KnockoutComponentTypes.ComponentInfo) => {
-				return new DefaultControl(ko.contextFor(componentInfo.element).$data);
+				const context = ko.contextFor(componentInfo.element);
+				return new DefaultControl(context.$data, context.$parent);
 			}
 		},
 		template: `

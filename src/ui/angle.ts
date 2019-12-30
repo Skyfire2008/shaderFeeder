@@ -3,14 +3,16 @@ namespace ShaderFeeder {
 	export class AngleControl {
 		public param: Param;
 		public value: KnockoutObservable<number>;
+		private parent: AppViewModel;
 		private dial: HTMLElement;
 		private dragging: boolean = false;
 		private posX: number;
 		private posY: number;
 		private startAngle: number;
 
-		constructor(param: Param, dial: HTMLElement) {
+		constructor(param: Param, parent: AppViewModel, dial: HTMLElement) {
 			this.param = param;
+			this.parent = parent;
 			this.dial = dial;
 			const rect = dial.getBoundingClientRect();
 			this.posX = (rect.left + rect.right) / 2;
@@ -24,7 +26,9 @@ namespace ShaderFeeder {
 			this.value = ko.observable(<number>param.defaultValues).extend({ numeric: null });
 			this.value.subscribe((newValue) => {
 				this.param.setter(newValue * Math.PI / 180);
-				this.param.owner.draw();
+				if (this.parent.redrawOnParamChange()) {
+					this.parent.redraw();
+				}
 			});
 		}
 
@@ -62,7 +66,8 @@ namespace ShaderFeeder {
 	ko.components.register("angle-input", {
 		viewModel: {
 			createViewModel: (params: any, componentInfo: KnockoutComponentTypes.ComponentInfo) => {
-				return new AngleControl(ko.contextFor(componentInfo.element).$data, (<HTMLElement>componentInfo.element).querySelector(".dial"));
+				const context = ko.contextFor(componentInfo.element);
+				return new AngleControl(context.$data, context.$parent, (<HTMLElement>componentInfo.element).querySelector(".dial"));
 			}
 		},
 		template: `

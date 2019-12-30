@@ -1,5 +1,7 @@
 namespace ShaderFeeder {
 
+	export var gl: WebGLRenderingContext;
+
 	interface NamedShader {
 		shader: Shader;
 		name: string;
@@ -11,15 +13,26 @@ namespace ShaderFeeder {
 		name: string;
 	}
 
-	class ViewModel {
+	export class AppViewModel {
 		public shaders: KnockoutObservableArray<NamedShader>;
 		public selectedShader: KnockoutObservable<NamedShader>;
 		public images: KnockoutObservableArray<NamedImage>;
 		public selectedImage: KnockoutObservable<NamedImage>;
 		public canvas: HTMLCanvasElement;
-		public gl: WebGLRenderingContext;
+
+		private quadShader: Shader;
+		private frameBuffers: Array<FrameBuffer>;
+		private currentFb = 0;
+
+		private keepRedrawing: KnockoutObservable<boolean>;
+		public redrawOnParamChange: KnockoutObservable<boolean>;
 
 		constructor() {
+			this.keepRedrawing = ko.observable(false);
+			this.redrawOnParamChange = ko.observable(true);
+			this.redrawOnParamChange.subscribe((value) => {
+				console.log(value);
+			})
 			this.shaders = ko.observableArray();
 			this.selectedShader = ko.observable();
 			this.selectedShader.subscribe(({ shader, name }) => {
@@ -28,32 +41,54 @@ namespace ShaderFeeder {
 					shader.bindTexture(this.selectedImage().texture);
 					shader.draw();
 				}
-			})
+			});
 			this.images = ko.observableArray();
 			this.selectedImage = ko.observable();
 			this.selectedImage.subscribe((newImage) => {
 				this.canvas.width = newImage.image.width;
 				this.canvas.height = newImage.image.height;
-				this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+				gl.viewport(0, 0, this.canvas.width, this.canvas.height);
 
-				if (this.selectedShader()) {
+				//set framebuffer texture dimensions
+				this.frameBuffers[0].updateTextureDim(newImage.image.width, newImage.image.height);
+				this.frameBuffers[1].updateTextureDim(newImage.image.width, newImage.image.height);
+
+				//draw texture into framebuffer 0
+				this.frameBuffers[0].bind();
+				this.quadShader.use();
+				this.quadShader.bindTexture(newImage.texture);
+				this.quadShader.draw();
+				this.currentFb = 0;
+
+				this.selectedShader().shader.use();
+
+				/*if (this.selectedShader()) {
 					const shader = this.selectedShader().shader;
 					shader.bindTexture(newImage.texture);
 					shader.draw();
-				}
+				}*/
 			});
 
 			//get webGL context
 			this.canvas = <HTMLCanvasElement>document.getElementById("canvas");
-			this.gl = this.canvas.getContext("webgl");
-			if (!this.gl) {
+			gl = this.canvas.getContext("webgl");
+			if (!gl) {
 				console.error("Could not create webGL rendering context");
 			}
-			Texture.init(this.gl);
+			this.frameBuffers = [];
+			for (let i = 0; i < 2; i++) {
+				this.frameBuffers.push(new FrameBuffer());
+			}
 
 			//load vertex shader and init Shader object
 			fetchFile("shaders/quad.vert").then((value) => {
-				Shader.init(this.gl, value);
+
+				//load the passthrough shader
+				fetchFile("shaders/quad.frag").then((shaderSrc) => {
+					this.quadShader = new Shader(shaderSrc);
+				});
+
+				Shader.init(value);
 
 				//load all shaders
 				const shaderNames = ["swizzle", "shift", "emboss"];
@@ -63,6 +98,41 @@ namespace ShaderFeeder {
 					});
 				}
 			});
+		}
+
+		public continuousRedrawing(): void {
+			this.keepRedrawing(!this.keepRedrawing());
+
+			const onEnterFrame = () => {
+				this.redraw();
+				if (this.keepRedrawing()) {
+					window.requestAnimationFrame(onEnterFrame);
+				}
+			}
+
+			if (this.keepRedrawing()) {
+				window.requestAnimationFrame(onEnterFrame);
+			}
+		}
+
+		public redraw(): void {
+			//draw into framebuffer
+			const selectedShader = this.selectedShader().shader;
+			selectedShader.use();
+			selectedShader.bindTexture(this.frameBuffers[this.currentFb].tex);
+			this.frameBuffers[1 - this.currentFb].bind();
+			selectedShader.draw();
+
+			//draw into display
+			FrameBuffer.unbind();
+			this.quadShader.use();
+			this.quadShader.bindTexture(this.frameBuffers[1 - this.currentFb].tex);
+			this.quadShader.draw();
+
+			//swap framebuffers
+			this.currentFb = 1 - this.currentFb;
+
+			selectedShader.use();
 		}
 
 		public uploadFile(file: File) {
@@ -86,7 +156,7 @@ namespace ShaderFeeder {
 	}
 
 	window.addEventListener("load", () => {
-		const viewModel = new ViewModel();
+		const viewModel = new AppViewModel();
 		ko.applyBindings(viewModel);
 	});
 }
