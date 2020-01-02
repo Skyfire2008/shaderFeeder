@@ -30,15 +30,28 @@ namespace ShaderFeeder {
 			this.param = param;
 			this.parent = parent;
 			this.values = [];
-			for (let i = 0; i < param.dim; i++) {
-				const current = ko.observable(param.defaultValues[i] ? param.defaultValues[i] : 0).extend({ numeric: null }); //TODO: fix this, doesn't consider the fact that default value can be a number
-				current.subscribe((value) => {
-					this.param.setter(this.values.map((value) => { return value(); }));
+			if (param.dim === 1) {
+				const current = ko.observable(<number>param.values).extend({ numeric: null });
+				current.subscribe((newValue) => {
+					this.param.values = newValue;
+					this.param.setter(newValue);
 					if (this.parent.redrawOnParamChange()) {
 						this.parent.redraw();
 					}
 				})
 				this.values.push(current);
+			} else {
+				for (let i = 0; i < param.dim; i++) {
+					const current = ko.observable(param.values[i]).extend({ numeric: null });
+					current.subscribe((newValue) => {
+						this.param.values[i] = newValue;
+						this.param.setter(this.values.map((value) => { return value(); }));
+						if (this.parent.redrawOnParamChange()) {
+							this.parent.redraw();
+						}
+					})
+					this.values.push(current);
+				}
 			}
 
 		}

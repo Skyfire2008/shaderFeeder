@@ -23,8 +23,9 @@ namespace ShaderFeeder {
 			document.addEventListener("mousemove", this.docMouseMove.bind(this));
 			document.addEventListener("mouseup", this.docMouseUp.bind(this));
 
-			this.value = ko.observable(<number>param.defaultValues).extend({ numeric: null });
+			this.value = ko.observable(<number>param.values).extend({ numeric: null });
 			this.value.subscribe((newValue) => {
+				param.values = newValue;
 				this.param.setter(newValue * Math.PI / 180);
 				if (this.parent.redrawOnParamChange()) {
 					this.parent.redraw();

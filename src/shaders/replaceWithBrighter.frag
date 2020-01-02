@@ -5,6 +5,14 @@
 			"input": "enum",
 			"enumValues": ["luminance", "sum", "red", "green", "blue"]
 		},
+		"mode":{
+			"input": "enum",
+			"enumValues": ["brighten", "darken"]
+		},
+		"normalizeVec":{
+			"input": "bool",
+			"defaultValue": true
+		},
 		"imgSize":{
 			"input": "imgSize"
 		}
@@ -17,7 +25,9 @@ varying vec2 UV;
 uniform sampler2D tex;
 
 uniform int heightMode;
+uniform int mode;
 uniform vec2 imgSize;
+uniform bool normalizeVec;
 
 float getHeight(vec4 color){
 	float result = 0.0;
@@ -34,6 +44,10 @@ float getHeight(vec4 color){
 		result = color.b;
 	}
 
+	if(mode==1){
+		result=1.0-result;
+	}
+
 	return result;
 }
 
@@ -43,20 +57,22 @@ void main(){
 	float myHeight = getHeight(myColor);
 
 	vec4 bestColor = myColor;
-	float bestHeight = 1337.0; //just a big number, since glsl has no infinity constant
+	float bestHeight = 1.0;
 
 	for(float i=-1.0; i<=1.0; i+=1.0){
 		for(float j=-1.0; j<=1.0; j+=1.0){
 
 			if(!(i==0.0 && j==0.0)){
-				vec4 currentColor = texture2D(tex, UV + normalize(vec2(i, j))/imgSize);
+				vec2 delta = vec2(i, j);
+				if(normalizeVec){
+					delta = normalize(delta);
+				}
+				vec4 currentColor = texture2D(tex, UV + delta/imgSize);
 				float currentHeight = getHeight(currentColor);
 
-				if(currentHeight>myHeight){
-					if(currentHeight<bestHeight){
-						bestHeight = currentHeight;
-						bestColor = currentColor;
-					}
+				if(currentHeight>myHeight && currentHeight<bestHeight){
+					bestHeight = currentHeight;
+					bestColor = currentColor;
 				}
 			}
 

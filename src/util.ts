@@ -14,7 +14,7 @@ namespace ShaderFeeder {
 		});
 	}
 
-	export function makeParamSetter(gl: WebGLRenderingContext, location: WebGLUniformLocation, dim: number, type: TypeEnum): (value: number | Array<number>) => void {
+	export function makeParamSetter(gl: WebGLRenderingContext, location: WebGLUniformLocation, dim: number, type: TypeEnum): (value: number | Array<number> | boolean) => void {
 		const funcName = `uniform${dim}${type.charAt(0)}`;
 
 		if (dim === 1) {

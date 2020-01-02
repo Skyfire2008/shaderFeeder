@@ -1,6 +1,7 @@
 namespace ShaderFeeder {
 
 	export var gl: WebGLRenderingContext;
+	export var vaoExt: OES_vertex_array_object;
 
 	interface NamedShader {
 		shader: Shader;
@@ -27,12 +28,11 @@ namespace ShaderFeeder {
 		private keepRedrawing: KnockoutObservable<boolean>;
 		public redrawOnParamChange: KnockoutObservable<boolean>;
 
+		private frameNum: number = 0;
+
 		constructor() {
 			this.keepRedrawing = ko.observable(false);
 			this.redrawOnParamChange = ko.observable(true);
-			this.redrawOnParamChange.subscribe((value) => {
-				console.log(value);
-			})
 			this.shaders = ko.observableArray();
 			this.selectedShader = ko.observable();
 			this.selectedShader.subscribe(({ shader, name }) => {
@@ -56,8 +56,10 @@ namespace ShaderFeeder {
 				//draw texture into framebuffer 0
 				this.frameBuffers[0].bind();
 				this.quadShader.use();
+				this.quadShader.setFlipY(true);
 				this.quadShader.bindTexture(newImage.texture);
 				this.quadShader.draw();
+				this.quadShader.setFlipY(false);
 				this.currentFb = 0;
 
 				this.selectedShader().shader.use();
@@ -75,6 +77,7 @@ namespace ShaderFeeder {
 			if (!gl) {
 				console.error("Could not create webGL rendering context");
 			}
+			vaoExt = gl.getExtension("OES_vertex_array_object");
 			this.frameBuffers = [];
 			for (let i = 0; i < 2; i++) {
 				this.frameBuffers.push(new FrameBuffer());
@@ -104,6 +107,7 @@ namespace ShaderFeeder {
 			this.keepRedrawing(!this.keepRedrawing());
 
 			const onEnterFrame = () => {
+				this.frameNum++;
 				this.redraw();
 				if (this.keepRedrawing()) {
 					window.requestAnimationFrame(onEnterFrame);
@@ -126,6 +130,7 @@ namespace ShaderFeeder {
 			//draw into display
 			FrameBuffer.unbind();
 			this.quadShader.use();
+			const foo = <any>this.quadShader;
 			this.quadShader.bindTexture(this.frameBuffers[1 - this.currentFb].tex);
 			this.quadShader.draw();
 

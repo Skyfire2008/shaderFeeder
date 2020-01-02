@@ -12,6 +12,10 @@
 		"heightMode":{
 			"input": "enum",
 			"enumValues": ["luminance", "sum", "red", "green", "blue"]
+		},
+		"normalMode":{
+			"input": "enum",
+			"enumValues": ["old", "new"]
 		}
 	}
 }*/
@@ -24,6 +28,7 @@ uniform vec2 imgSize;
 
 uniform float strength;
 uniform int heightMode;
+uniform int normalMode;
 
 float getHeight(vec4 color){
 	float result = 0.0;
@@ -44,10 +49,20 @@ float getHeight(vec4 color){
 }
 
 void main(){
-	float height = getHeight(texture2D(tex, UV));
-	float heightX = getHeight(texture2D(tex, UV + vec2(1.0/imgSize.x, 0.0)));
-	float heightY = getHeight(texture2D(tex, UV + vec2(0.0, 1.0/imgSize.y)));
-	vec2 delta = vec2(heightX - height, heightY - height) * strength / imgSize;
+	vec2 delta = vec2(0.0);
+
+	if(normalMode==0){
+		float height = getHeight(texture2D(tex, UV));
+		float heightX = getHeight(texture2D(tex, UV + vec2(1.0/imgSize.x, 0.0)));
+		float heightY = getHeight(texture2D(tex, UV + vec2(0.0, 1.0/imgSize.y)));
+		delta = vec2(heightX - height, heightY - height) * strength / imgSize;
+	}else{
+		float heightX0 = getHeight(texture2D(tex, UV - vec2(1.0/imgSize.x, 0.0)));
+		float heightY0 = getHeight(texture2D(tex, UV - vec2(0.0, 1.0/imgSize.y)));
+		float heightX1 = getHeight(texture2D(tex, UV + vec2(1.0/imgSize.x, 0.0)));
+		float heightY1 = getHeight(texture2D(tex, UV + vec2(0.0, 1.0/imgSize.y)));
+		delta = vec2(heightX1 - heightX0, heightY1 - heightY0) * strength / imgSize;
+	}
 
 	gl_FragColor = texture2D(tex, (UV+delta));
 }

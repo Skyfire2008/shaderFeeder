@@ -35,16 +35,11 @@ namespace ShaderFeeder {
 				1, 1,
 				1, -1
 			];
+
 			Shader.quadBuf = gl.createBuffer();
 			gl.bindBuffer(gl.ARRAY_BUFFER, Shader.quadBuf);
 			gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(points), gl.STATIC_DRAW);
-			gl.vertexAttribPointer(
-				0,
-				2,
-				gl.FLOAT,
-				false,
-				0,
-				0);
+			gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
 			gl.enableVertexAttribArray(0);
 		}
 
@@ -56,6 +51,7 @@ namespace ShaderFeeder {
 
 		private texLoc: WebGLUniformLocation;
 		private imgSizeLoc: WebGLUniformLocation = null;
+		private flipYLoc: WebGLUniformLocation;
 
 		constructor(fragSrc: string) {
 			this.id = gl.createProgram();
@@ -68,6 +64,9 @@ namespace ShaderFeeder {
 			gl.linkProgram(this.id);
 			gl.validateProgram(this.id);
 
+			this.use();
+			this.flipYLoc = gl.getUniformLocation(this.id, "flipY");
+
 			this.texLoc = gl.getUniformLocation(this.id, "tex");
 
 			if (!gl.getProgramParameter(this.id, gl.LINK_STATUS)) {
@@ -79,6 +78,8 @@ namespace ShaderFeeder {
 			const reg = /.*\/\*@config(.+)\*\//s;
 			const result = reg.exec(fragSrc);
 			if (result !== null) {
+
+				//TODO: this is bad...
 				const config = <ConfigDef>JSON.parse(result[1]);
 				//for every parameter name...
 				for (const name in config.params) {
@@ -107,6 +108,11 @@ namespace ShaderFeeder {
 							paramDef.type = TypeEnum.float;
 							break;
 						}
+						case InputEnum.bool: {
+							paramDef.dim = 1;
+							paramDef.type = TypeEnum.int;
+							break;
+						}
 					}
 
 					this.params.push({
@@ -115,12 +121,15 @@ namespace ShaderFeeder {
 						dim: paramDef.dim,
 						inputType: paramDef.input,
 						setter: makeParamSetter(gl, loc, paramDef.dim, paramDef.type),
-						defaultValues: makeDefaultParamValues(paramDef.dim),
+						values: makeDefaultParamValues(paramDef.dim),
 						enumValues: paramDef.enumValues
 					});
 				}
-
 			}
+		}
+
+		public setFlipY(value: boolean) {
+			gl.uniform1i(this.flipYLoc, value ? 1 : 0);
 		}
 
 		public use(): void {
@@ -148,7 +157,7 @@ namespace ShaderFeeder {
 		inputType: InputEnum;
 		description: string;
 		setter: (value: number | Array<number>) => void;
-		defaultValues: number | Array<number>;
+		values: number | Array<number>;
 		enumValues?: Array<string>;
 	}
 
@@ -156,7 +165,8 @@ namespace ShaderFeeder {
 		default = "default",
 		enum = "enum",
 		imgSize = "imgSize",
-		angle = "angle"
+		angle = "angle",
+		bool = "bool"
 	}
 
 	export const enum TypeEnum {

@@ -8,8 +8,9 @@ namespace ShaderFeeder {
 		constructor(param: Param, parent: AppViewModel) {
 			this.param = param;
 			this.parent = parent;
-			this.selectedValue = ko.observable(0);
+			this.selectedValue = ko.observable(<number>param.values);
 			this.selectedValue.subscribe((newValue) => {
+				param.values = newValue;
 				this.param.setter(newValue);
 				if (this.parent.redrawOnParamChange()) {
 					this.parent.redraw();
