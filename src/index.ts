@@ -91,7 +91,7 @@ namespace ShaderFeeder {
 				Shader.init(value);
 
 				//load all shaders
-				const shaderNames = ["swizzle", "shift", "emboss"];
+				const shaderNames = ["swizzle", "shift", "emboss", "replaceWithBrighter"];
 				for (const name of shaderNames) {
 					fetchFile(`shaders/${name}.frag`).then((shaderSrc) => {
 						this.shaders.push({ name, shader: new Shader(shaderSrc) });
