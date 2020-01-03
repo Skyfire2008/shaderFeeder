@@ -1,7 +1,6 @@
 namespace ShaderFeeder {
 
 	export var gl: WebGLRenderingContext;
-	export var vaoExt: OES_vertex_array_object;
 
 	interface NamedShader {
 		shader: Shader;
@@ -19,21 +18,39 @@ namespace ShaderFeeder {
 		public selectedShader: KnockoutObservable<NamedShader>;
 		public images: KnockoutObservableArray<NamedImage>;
 		public selectedImage: KnockoutObservable<NamedImage>;
+		public keepRedrawing: KnockoutObservable<boolean>;
+		public redrawOnParamChange: KnockoutObservable<boolean>;
+		public scale: KnockoutObservable<number>;
+
 		public canvas: HTMLCanvasElement;
 
 		private quadShader: Shader;
 		private frameBuffers: Array<FrameBuffer>;
 		private currentFb = 0;
 
-		private keepRedrawing: KnockoutObservable<boolean>;
-		public redrawOnParamChange: KnockoutObservable<boolean>;
-
 		private frameNum: number = 0;
+
+		private rescale() {
+			const width = Math.round(this.selectedImage().image.width * this.scale());
+			const height = Math.round(this.selectedImage().image.height * this.scale());
+			this.canvas.width = width;
+			this.canvas.height = height;
+			gl.viewport(0, 0, width, height);
+
+			this.frameBuffers[0].updateTextureDim(width, height);
+			this.frameBuffers[1].updateTextureDim(width, height);
+		}
 
 		constructor() {
 			this.keepRedrawing = ko.observable(false);
-			this.redrawOnParamChange = ko.observable(true);
+			this.redrawOnParamChange = ko.observable(false);
 			this.shaders = ko.observableArray();
+
+			this.scale = ko.observable(1).extend({ numeric: null });
+			this.scale.subscribe((newValue) => {
+				this.rescale();
+			});
+
 			this.selectedShader = ko.observable();
 			this.selectedShader.subscribe(({ shader, name }) => {
 				shader.use();
@@ -42,16 +59,11 @@ namespace ShaderFeeder {
 					shader.draw();
 				}
 			});
+
 			this.images = ko.observableArray();
 			this.selectedImage = ko.observable();
 			this.selectedImage.subscribe((newImage) => {
-				this.canvas.width = newImage.image.width;
-				this.canvas.height = newImage.image.height;
-				gl.viewport(0, 0, this.canvas.width, this.canvas.height);
-
-				//set framebuffer texture dimensions
-				this.frameBuffers[0].updateTextureDim(newImage.image.width, newImage.image.height);
-				this.frameBuffers[1].updateTextureDim(newImage.image.width, newImage.image.height);
+				this.rescale();
 
 				//draw texture into framebuffer 0
 				this.frameBuffers[0].bind();
@@ -77,7 +89,6 @@ namespace ShaderFeeder {
 			if (!gl) {
 				console.error("Could not create webGL rendering context");
 			}
-			vaoExt = gl.getExtension("OES_vertex_array_object");
 			this.frameBuffers = [];
 			for (let i = 0; i < 2; i++) {
 				this.frameBuffers.push(new FrameBuffer());
@@ -94,7 +105,7 @@ namespace ShaderFeeder {
 				Shader.init(value);
 
 				//load all shaders
-				const shaderNames = ["swizzle", "shift", "emboss", "replaceWithBrighter"];
+				const shaderNames = ["swizzle", "shift", "emboss", "replaceWithBrighter", "chromaticAberration"];
 				for (const name of shaderNames) {
 					fetchFile(`shaders/${name}.frag`).then((shaderSrc) => {
 						this.shaders.push({ name, shader: new Shader(shaderSrc) });
@@ -120,6 +131,7 @@ namespace ShaderFeeder {
 		}
 
 		public redraw(): void {
+
 			//draw into framebuffer
 			const selectedShader = this.selectedShader().shader;
 			selectedShader.use();

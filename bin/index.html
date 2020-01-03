@@ -23,11 +23,14 @@
 	</div>
 	<canvas style="display: block;" id="canvas"></canvas>
 
-	<label for="imageUpload">Select the image:</label>
-	<input id="imageUpload" type="file" accept="image/jpeg, image/png, image/bmp, image/tiff, image/webp"
-		data-bind="event: {change: ()=>{uploadFile($element.files[0])}}"></input>
-
-	<select data-bind="options: images, optionsText: 'name', value: selectedImage"></select>
+	<div>
+		<label for="imageUpload">Select the image:</label>
+		<input id="imageUpload" type="file" accept="image/jpeg, image/png, image/bmp, image/tiff, image/webp"
+			data-bind="event: {change: ()=>{uploadFile($element.files[0])}}"></input>
+		<select data-bind="options: images, optionsText: 'name', value: selectedImage"></select>
+		<label for="imageScale">Scale:</label>
+		<input id="imageScale" type="number" step="any" data-bind="textInput: scale"></input>
+	</div>
 
 	<div>
 		<label for="redrawOnParamChange">Redraw on parameter change:</label>
