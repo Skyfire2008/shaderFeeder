@@ -30,15 +30,16 @@ namespace ShaderFeeder {
 
 		private frameNum: number = 0;
 
+		private reset() {
+			this.selectedImage.notifySubscribers(this.selectedImage());
+		}
+
 		private rescale() {
 			const width = Math.round(this.selectedImage().image.width * this.scale());
 			const height = Math.round(this.selectedImage().image.height * this.scale());
 			this.canvas.width = width;
 			this.canvas.height = height;
 			gl.viewport(0, 0, width, height);
-
-			this.frameBuffers[0].updateTextureDim(width, height);
-			this.frameBuffers[1].updateTextureDim(width, height);
 		}
 
 		constructor() {
@@ -54,10 +55,6 @@ namespace ShaderFeeder {
 			this.selectedShader = ko.observable();
 			this.selectedShader.subscribe(({ shader, name }) => {
 				shader.use();
-				if (this.selectedImage()) {
-					shader.bindTexture(this.selectedImage().texture);
-					shader.draw();
-				}
 			});
 
 			this.images = ko.observableArray();
@@ -65,7 +62,11 @@ namespace ShaderFeeder {
 			this.selectedImage.subscribe((newImage) => {
 				this.rescale();
 
+				this.frameBuffers[0].updateTextureDim(newImage.image.width, newImage.image.height);
+				this.frameBuffers[1].updateTextureDim(newImage.image.width, newImage.image.height);
+
 				//draw texture into framebuffer 0
+				gl.viewport(0, 0, newImage.image.width, newImage.image.width);
 				this.frameBuffers[0].bind();
 				this.quadShader.use();
 				this.quadShader.setFlipY(true);
@@ -76,11 +77,7 @@ namespace ShaderFeeder {
 
 				this.selectedShader().shader.use();
 
-				/*if (this.selectedShader()) {
-					const shader = this.selectedShader().shader;
-					shader.bindTexture(newImage.texture);
-					shader.draw();
-				}*/
+				this.redraw();
 			});
 
 			//get webGL context
@@ -133,6 +130,7 @@ namespace ShaderFeeder {
 		public redraw(): void {
 
 			//draw into framebuffer
+			gl.viewport(0, 0, this.selectedImage().texture.width, this.selectedImage().texture.height);
 			const selectedShader = this.selectedShader().shader;
 			selectedShader.use();
 			selectedShader.bindTexture(this.frameBuffers[this.currentFb].tex);
@@ -140,9 +138,9 @@ namespace ShaderFeeder {
 			selectedShader.draw();
 
 			//draw into display
+			gl.viewport(0, 0, this.selectedImage().texture.width * this.scale(), this.selectedImage().texture.height * this.scale());
 			FrameBuffer.unbind();
 			this.quadShader.use();
-			const foo = <any>this.quadShader;
 			this.quadShader.bindTexture(this.frameBuffers[1 - this.currentFb].tex);
 			this.quadShader.draw();
 
